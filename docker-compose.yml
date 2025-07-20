@@ -26,5 +26,15 @@ services:
     environment:
       - tz=Europe/Moscow
 
+  api:
+    build:
+      context: .
+      dockerfile: demo-fastapi/Dockerfile
+    container_name: demo-api-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - tz=Europe/Moscow
+
 volumes:
   rabbitmq-data:
