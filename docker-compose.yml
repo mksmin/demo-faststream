@@ -1,0 +1,30 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    hostname: rabbitmq
+    container_name: demo-rabbitmq-dev
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: "admin"
+      RABBITMQ_DEFAULT_PASS: "secret"
+      RabbitMQ_DEFAULT_VHOST: "dev"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  bot:
+    build:
+      context: .
+      dockerfile: demo-aiogram/Dockerfile
+    container_name: demo-bot-dev
+    environment:
+      - tz=Europe/Moscow
+
+volumes:
+  rabbitmq-data:
