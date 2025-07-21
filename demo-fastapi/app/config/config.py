@@ -1,7 +1,8 @@
 import logging
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from urllib.parse import quote
 
 
 class LoggingConfig(BaseSettings):
@@ -16,6 +17,24 @@ class LoggingConfig(BaseSettings):
         )
 
 
+class RabbitConfig(BaseModel):
+    host: str = "localhost"
+    port: int = 5672
+    username: str = "guest"
+    password: str = "guest"
+    vhostname: str | None = None
+
+    @computed_field
+    @property
+    def url(self) -> str:
+        safe_username = quote(self.username, safe="")
+        safe_password = quote(self.password, safe="")
+        if self.vhostname:
+            safe_vhostname = quote(self.vhostname, safe="")
+
+        return f"amqp://{safe_username}:{safe_password}@{self.host}:{self.port}/{safe_vhostname if self.vhostname else ''}"
+
+
 class RunConfig(BaseModel):
     host: str = "0.0.0.0"
     port: int = 8000
@@ -25,14 +44,16 @@ class RunConfig(BaseModel):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file="../../../demo-aiogram/.env",
+        env_file=".env",
         case_sensitive=False,
         env_nested_delimiter="__",
         env_prefix="API_CONFIG__",
     )
 
     log: LoggingConfig = Field(default_factory=LoggingConfig)
+    rabbit: RabbitConfig = Field(default_factory=RabbitConfig)
     run: RunConfig = Field(default_factory=RunConfig)
 
 
 settings = Settings()
+print(f"Settings: {settings.rabbit.url}")
