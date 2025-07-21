@@ -7,6 +7,7 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 
 from app.config.config import settings
+from app.broker_handlers import broker
 
 router = Router()
 log = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ async def cmd_start(message: types.Message):
     await message.answer("Hello, World!")
 
 
-async def start_bot() -> Bot:
+async def get_bot() -> Bot:
     bot_instance = Bot(
         token=settings.bot.token,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
@@ -25,9 +26,9 @@ async def start_bot() -> Bot:
     return bot_instance
 
 
-async def main():
+async def start_bot():
     settings.log.configurate_logging()
-    bot = await start_bot()
+    bot = await get_bot()
 
     dp = Dispatcher()
     dp.include_router(router)
@@ -38,6 +39,13 @@ async def main():
         await dp.start_polling(bot)
     finally:
         await bot.session.close()
+
+
+async def main():
+    await asyncio.gather(
+        broker.start(),
+        start_bot(),
+    )
 
 
 if __name__ == "__main__":

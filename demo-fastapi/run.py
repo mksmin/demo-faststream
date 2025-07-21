@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from app.config import settings
 from app.api import api_router
+from app.broker_handlers.main_handler import router as broker_router
 
 settings.log.configurate_logging()
 log = logging.getLogger(__name__)
@@ -35,6 +36,9 @@ app = FastAPI(
 )
 app.include_router(
     api_router,
+)
+app.include_router(
+    broker_router,
 )
 
 
